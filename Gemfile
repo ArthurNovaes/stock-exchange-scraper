@@ -3,6 +3,7 @@
 source 'https://rubygems.org'
 
 gem 'httparty'
+gem 'json'
+gem 'minitest'
 gem 'nokogiri'
 gem 'pry'
-gem 'csv'

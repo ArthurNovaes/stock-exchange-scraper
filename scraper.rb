@@ -1,32 +1,36 @@
 # frozen_string_literal: true
 
 require 'open-uri'
-require 'nokogiri'
-require 'csv'
+require 'json'
+require_relative 'parser'
 
-html = open('https://br.advfn.com/bolsa-de-valores/bovespa/enjoei-com-br-atividades-on-ENJU3/cotacao')
-response = Nokogiri::HTML(html)
-stock_response = response.css('div#quote_top div.TableElement table tr.odd')
+class Scraper
+  attr_reader :url
 
-data_arr = []
-stock_name = stock_response.css('td b')[0].text
-stock_code = stock_response.css('td b')[1].text
-day_variation = stock_response.css('td.change').text
-current_price = stock_response.css('td.current_price').text
-hour = stock_response.css('td span#quoteElementPiece11').text
-business_number = stock_response.css('td span#quoteElementPiece20').text
-last_business = stock_response.css('td span#quoteElementPiece24').text
-job_timestamp = Time.now
+  def initialize(url)
+    @url = url
+  end
 
-data_arr.push([stock_name,
-               stock_code,
-               day_variation,
-               current_price,
-               hour,
-               business_number,
-               last_business,
-               job_timestamp])
+  def scrape_page
+    html = open(url)
+    result = Parser.new(html).parse
 
-CSV.open('data.csv', "a+") do |csv|
-  csv << [stock_name,stock_code, day_variation, current_price, hour, business_number, last_business, job_timestamp]
+    if result == 'ERROR, invalid url'
+      return puts "🔺 🔺 🔺 🔺 🔺  #{result} 🔺 🔺 🔺 🔺 "
+    end
+
+    file = File.read('./data/stock.json')
+    send_to_json(file, result)
+  end
+
+  private
+
+  def send_to_json(file, obj)
+    data_from_json = file.empty? ? [] : JSON[file]
+    data_from_json = [data_from_json] if data_from_json.class != Array
+    File.open('./data/stock.json', 'w') do |json|
+      json.write(JSON.pretty_generate(data_from_json << obj))
+      puts '🔹 🔹 🔹 DONE🔹 🔹 🔹'
+    end
+  end
 end
