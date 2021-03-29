@@ -5,10 +5,11 @@ require 'json'
 require_relative 'parser'
 
 class Scraper
-  attr_reader :url
+  attr_reader :url, :file_path
 
-  def initialize(url)
+  def initialize(url, file_path)
     @url = url
+    @file_path = file_path
   end
 
   def scrape_page
@@ -16,10 +17,10 @@ class Scraper
     result = Parser.new(html).parse
 
     if result == 'ERROR, invalid url'
-      return puts "🔺 🔺 🔺 🔺 🔺  #{result} 🔺 🔺 🔺 🔺 "
+      return "🔺 🔺 🔺 🔺 🔺  #{result} 🔺 🔺 🔺 🔺 "
     end
 
-    file = File.read('./data/stock.json')
+    file = File.read(file_path)
     send_to_json(file, result)
   end
 
@@ -28,9 +29,9 @@ class Scraper
   def send_to_json(file, obj)
     data_from_json = file.empty? ? [] : JSON[file]
     data_from_json = [data_from_json] if data_from_json.class != Array
-    File.open('./data/stock.json', 'w') do |json|
+    File.open(file_path, 'w') do |json|
       json.write(JSON.pretty_generate(data_from_json << obj))
-      puts '🔹 🔹 🔹 DONE🔹 🔹 🔹'
+      return '🔹 🔹 🔹 DONE🔹 🔹 🔹'
     end
   end
 end
